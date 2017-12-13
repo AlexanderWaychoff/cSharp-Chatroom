@@ -16,10 +16,10 @@ namespace Server
         TcpListener listener;
 
         private Queue<Message> queueMessages; 
-        private bool isServerOpen;
+
         private Object QueueLock = new Object();
         int UserId;
-        public Server()        
+     
 
 
         private Object DictionaryLock;
