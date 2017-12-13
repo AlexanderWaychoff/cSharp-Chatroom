@@ -32,7 +32,7 @@ namespace Server
                     {
                         AcceptClient();
                         string message = client.Recieve();
-                        Respond(message);
+                        Respond(message);                        
                     }
                     catch
                     {
