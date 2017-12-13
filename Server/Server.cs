@@ -14,11 +14,28 @@ namespace Server
     {
         public static Client client;
         TcpListener listener;
+
         private Queue<Message> queueMessages; 
         private bool isServerOpen;
         private Object QueueLock = new Object();
         int UserId;
         public Server()        
+
+
+        private Object DictionaryLock;
+        private static bool isServerOpen;
+        public static bool IsServerOpen
+        {
+            get
+            {
+                return isServerOpen;
+            }
+            set
+            {
+                isServerOpen = value;
+            }
+        }
+        public Server()
 
         {
             queueMessages = new Queue<Message>();
@@ -36,8 +53,13 @@ namespace Server
                     try
                     {
                         AcceptClient();
-                        string message = client.Recieve();                        
-                        Respond(message);                        
+
+                        //lock (DictionaryLock)
+                        //{
+                            string userName = client.Receive();
+                            Respond(userName + " has joined.");
+                        //}                      
+
                     }
                     catch
                     {
@@ -54,7 +76,7 @@ namespace Server
             NetworkStream stream = clientSocket.GetStream();
             client = new Client(stream, clientSocket);
         }
-        private void Respond(string body)
+        public static void Respond(string body)
         {
              client.Send(body);            
         }

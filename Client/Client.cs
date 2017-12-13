@@ -41,8 +41,10 @@ namespace Client
             try
             {
                 GetUsername();
+                Console.WriteLine("\nAttempting to connect.\n");
                 clientSocket.Connect(IPAddress.Parse(IP), port);                
                 IsConnected = true;
+                Console.WriteLine("Connection Successful!\n");
                 stream = clientSocket.GetStream();
             }
             catch
@@ -50,23 +52,32 @@ namespace Client
                 isConnected = false;
             }
         }
-        public void Send()
+        public void SendName()
         {
-            string messageString = UI.GetInput();
+            string messageString = Username;
             byte[] message = Encoding.ASCII.GetBytes(messageString);
             stream.Write(message, 0, message.Count());
         }
-        public void Recieve()
+        public Task Send()
+        {
+            return Task.Run(() =>
+            {
+                string messageString = UI.GetInput();
+                byte[] message = Encoding.ASCII.GetBytes(messageString);
+                stream.Write(message, 0, message.Count());
+            });
+        }
+        public void Receive()
         {
             byte[] recievedMessage = new byte[256];
             stream.Read(recievedMessage, 0, recievedMessage.Length);
             UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
         }
 
-        public string GetUsername()
+        public void GetUsername()
         {
             Console.WriteLine("Please enter your username");
-            return username = Console.ReadLine();
+            username = Console.ReadLine();
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Server
         NetworkStream stream;
         TcpClient client;
         public string UserId;
+        public Dictionary<int, string> userInfo = new Dictionary<int, string>();
         
         public Client(NetworkStream Stream, TcpClient Client)
         {
@@ -24,7 +25,7 @@ namespace Server
             byte[] message = Encoding.ASCII.GetBytes(Message);
             stream.Write(message, 0, message.Count());
         }
-        public string Recieve()
+        public string Receive()
         {
             byte[] recievedMessage = new byte[256];
             stream.Read(recievedMessage, 0, recievedMessage.Length);
