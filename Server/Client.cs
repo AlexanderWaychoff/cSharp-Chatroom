@@ -12,6 +12,7 @@ namespace Server
         NetworkStream stream;
         TcpClient client;
         public string UserId;
+        public Dictionary<int, string> userInfo = new Dictionary<int, string>();
         
         public Client(NetworkStream Stream, TcpClient Client)
         {

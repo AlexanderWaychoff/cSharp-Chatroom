@@ -14,6 +14,7 @@ namespace Server
     {
         public static Client client;
         TcpListener listener;
+        private Object DictionaryLock;
         private static bool isServerOpen;
         public static bool IsServerOpen
         {
@@ -42,8 +43,11 @@ namespace Server
                     try
                     {
                         AcceptClient();
-                        string message = client.Receive();
-                        Respond(message);                        
+                        //lock (DictionaryLock)
+                        //{
+                            string userName = client.Receive();
+                            Respond(userName + " has joined.");
+                        //}                      
                     }
                     catch
                     {
