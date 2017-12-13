@@ -12,11 +12,32 @@ namespace Client
     {
         TcpClient clientSocket;
         NetworkStream stream;
+        private bool isConnected;
+
+        public bool IsConnected
+        {
+            get
+            {
+                return isConnected;
+            }
+            set
+            {
+                isConnected = value;
+            }
+        }
+
         public Client(string IP, int port)
         {
             clientSocket = new TcpClient();
-            clientSocket.Connect(IPAddress.Parse(IP), port);
-            stream = clientSocket.GetStream();
+            try
+            {
+                clientSocket.Connect(IPAddress.Parse(IP), port);
+                stream = clientSocket.GetStream();
+            }
+            catch
+            {
+                isConnected = false;
+            }
         }
         public void Send()
         {
