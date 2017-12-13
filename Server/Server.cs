@@ -13,22 +13,38 @@ namespace Server
     class Server
     {
         public static Client client;
-        TcpListener server;
+        TcpListener listener;
+        private bool isServerOpen;
         public Server()
         {
-            server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9999);
-            server.Start();
+            int port = 9999;
+            listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")
+            listener.Start();
         }
-        public void Run()
+        public Task Run()
         {
-            AcceptClient();
-            string message = client.Recieve();
-            Respond(message);
+            return Task.Run(() =>
+            {
+                isServerOpen = true;
+                while (isServerOpen)
+                {
+                    try
+                    {
+                        AcceptClient();
+                        string message = client.Recieve();
+                        Respond(message);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            });
         }
         private void AcceptClient()
         {
             TcpClient clientSocket = default(TcpClient);
-            clientSocket = server.AcceptTcpClient();
+            clientSocket = listener.AcceptTcpClient();
             Console.WriteLine("Connected");
             NetworkStream stream = clientSocket.GetStream();
             client = new Client(stream, clientSocket);
