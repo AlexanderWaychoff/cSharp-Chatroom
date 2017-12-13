@@ -12,6 +12,7 @@ namespace Server
         NetworkStream stream;
         TcpClient client;
         public string UserId;
+        
         public Client(NetworkStream Stream, TcpClient Client)
         {
             stream = Stream;
@@ -30,7 +31,6 @@ namespace Server
             string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
             Console.WriteLine(recievedMessageString);
             return recievedMessageString;
-        }
-
+        }        
     }
 }

@@ -13,6 +13,15 @@ namespace Client
         TcpClient clientSocket;
         NetworkStream stream;
         private bool isConnected;
+        private string username;
+
+        public string Username
+        {
+            get
+            {
+                return username;
+            }
+        }
 
         public bool IsConnected
         {
@@ -31,7 +40,9 @@ namespace Client
             clientSocket = new TcpClient();
             try
             {
-                clientSocket.Connect(IPAddress.Parse(IP), port);
+                GetUsername();
+                clientSocket.Connect(IPAddress.Parse(IP), port);                
+                IsConnected = true;
                 stream = clientSocket.GetStream();
             }
             catch
@@ -50,6 +61,12 @@ namespace Client
             byte[] recievedMessage = new byte[256];
             stream.Read(recievedMessage, 0, recievedMessage.Length);
             UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
+        }
+
+        public string GetUsername()
+        {
+            Console.WriteLine("Please enter your username");
+            return username = Console.ReadLine();
         }
     }
 }
