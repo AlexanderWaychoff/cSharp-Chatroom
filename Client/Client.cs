@@ -50,11 +50,14 @@ namespace Client
                 isConnected = false;
             }
         }
-        public void Send()
+        public Task Send()
         {
-            string messageString = UI.GetInput();
-            byte[] message = Encoding.ASCII.GetBytes(messageString);
-            stream.Write(message, 0, message.Count());
+            return Task.Run(() =>
+            {
+                string messageString = UI.GetInput();
+                byte[] message = Encoding.ASCII.GetBytes(messageString);
+                stream.Write(message, 0, message.Count());
+            });
         }
         public void Recieve()
         {

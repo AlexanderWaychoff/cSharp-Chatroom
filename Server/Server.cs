@@ -14,7 +14,18 @@ namespace Server
     {
         public static Client client;
         TcpListener listener;
-        private bool isServerOpen;
+        private static bool isServerOpen;
+        public static bool IsServerOpen
+        {
+            get
+            {
+                return isServerOpen;
+            }
+            set
+            {
+                isServerOpen = value;
+            }
+        }
         public Server()
         {
             int port = 9999;
@@ -31,7 +42,7 @@ namespace Server
                     try
                     {
                         AcceptClient();
-                        string message = client.Recieve();
+                        string message = client.Receive();
                         Respond(message);                        
                     }
                     catch
@@ -49,7 +60,7 @@ namespace Server
             NetworkStream stream = clientSocket.GetStream();
             client = new Client(stream, clientSocket);
         }
-        private void Respond(string body)
+        public static void Respond(string body)
         {
              client.Send(body);
         }

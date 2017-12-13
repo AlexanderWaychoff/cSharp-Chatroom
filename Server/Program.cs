@@ -11,6 +11,11 @@ namespace Server
         static void Main(string[] args)
         {
             new Server().Run();
+            //while (Server.IsServerOpen)
+            //{
+            //    string message = Server.client.Receive();
+            //    Server.Respond(message);
+            //}
             Console.ReadLine();
         }
     }
