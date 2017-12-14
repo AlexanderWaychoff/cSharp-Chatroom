@@ -12,12 +12,15 @@ namespace Server
         NetworkStream stream;
         TcpClient client;
         public string UserId;
-        public Dictionary<int, string> userInfo = new Dictionary<int, string>();
+        public string userName;
+        public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
+        //public List<IObserver<Client>> subscribers = new List<IObserver<Client>>();
         
-        public Client(NetworkStream Stream, TcpClient Client)
+        public Client(NetworkStream Stream, TcpClient Client, string userName)
         {
             stream = Stream;
             client = Client;
+            this.userName = userName;
             UserId = "495933b6-1762-47a1-b655-483510072e73";
         }
         public void Send(string Message)
