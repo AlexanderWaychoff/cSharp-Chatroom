@@ -42,7 +42,7 @@ namespace Client
             {
                 GetUsername();
                 Console.WriteLine("\nAttempting to connect.\n");
-                clientSocket.Connect(IPAddress.Parse(IP), port);                
+                clientSocket.Connect(IPAddress.Parse(IP), port);
                 IsConnected = true;
                 Console.WriteLine("Connection Successful!\n");
                 stream = clientSocket.GetStream();
@@ -74,19 +74,23 @@ namespace Client
                 }
             });
         }
-        public void Receive()
+        public Task Receive()
         {
-            try
+
+            return Task.Run(() =>
             {
-                byte[] recievedMessage = new byte[256];
-                stream.Read(recievedMessage, 0, recievedMessage.Length);
-                UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
-            }
-            catch
-            {
-                Console.WriteLine("Connection was lost!");
-                IsConnected = false;
-            }
+                try
+                {
+                    byte[] recievedMessage = new byte[256];
+                    stream.Read(recievedMessage, 0, recievedMessage.Length);
+                    UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
+                }
+                catch
+                {
+                    Console.WriteLine("Connection was lost!");
+                    IsConnected = false;
+                }
+            });
         }
 
         public void GetUsername()
@@ -94,5 +98,14 @@ namespace Client
             Console.WriteLine("Please enter your username");
             username = Console.ReadLine();
         }
+
+        public Task Chat()
+        {
+            return Task.Run(() =>
+            {
+                Parallel.Invoke(Send(), Receive());
+            });        
+        }
+        
     }
 }
