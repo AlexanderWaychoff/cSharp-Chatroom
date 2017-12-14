@@ -19,10 +19,11 @@ namespace Server
 
         private Object QueueLock = new Object();
         int UserId = 1;
+        string userName;
      
 
 
-        private Object DictionaryLock;
+        private Object AcceptClientLock = new Object();
         private static bool isServerOpen;
         public static bool IsServerOpen
         {
@@ -53,15 +54,8 @@ namespace Server
                     try
                     {
                         AcceptClient();
-
-                        //lock (DictionaryLock)
-                        //{
-                            string userName = client.Receive();
-                            Respond(userName + " has joined.");
-                        client.userInfo.Add(UserId, userName);
-                        UserId += 1;
-                        //}                      
-
+                        string message = client.Receive();
+                        Respond(message);
                     }
                     catch
                     {
@@ -70,15 +64,25 @@ namespace Server
                 }
             });
         }
-        private void AcceptClient()
+        private Task AcceptClient()
         {
-            TcpClient clientSocket = default(TcpClient);
-            clientSocket = listener.AcceptTcpClient();
-            Console.WriteLine("Connection Initiated");
-            NetworkStream stream = clientSocket.GetStream();
-            client = new Client(stream, clientSocket);
+            return Task.Run(() =>
+            {
+                lock (AcceptClientLock)
+                {
+                    TcpClient clientSocket = default(TcpClient);
+                    clientSocket = listener.AcceptTcpClient();
+                    Console.WriteLine("Connection Initiated");
+                    NetworkStream stream = clientSocket.GetStream();
+                    client = new Client(stream, clientSocket);
+                    userName = client.Receive();
+                    client.userInfo.Add(UserId, userName);
+                    UserId += 1;
+                    Respond(userName + " has joined.");
+                }
+            });
         }
-        public static void Respond(string body)
+        public void Respond(string body)
         {
              client.Send(body);            
         }
