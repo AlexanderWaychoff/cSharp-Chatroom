@@ -20,7 +20,6 @@ namespace Server
         private Object DictionaryLock = new Object();
         private ILog Logger;
         int UserId = 1;
-        string userName;
         private Object AcceptClientLock = new Object();
         private static bool isServerOpen;
         List<int> Connections = new List<int>();
@@ -88,7 +87,7 @@ namespace Server
                     clientSocket = listener.AcceptTcpClient();
                     Console.WriteLine("Connection Initiated");
                     NetworkStream stream = clientSocket.GetStream();
-                    client = new Client(stream, clientSocket, userName);
+                    client = new Client(stream, clientSocket);
                     lock (DictionaryLock) client.userInfo.Add(UserId, client);
                     //client.subscribers.Add(client);
                     UserId += 1;

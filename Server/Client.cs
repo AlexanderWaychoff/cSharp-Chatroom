@@ -16,7 +16,7 @@ namespace Server
         public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
         //public List<IObserver<Client>> subscribers = new List<IObserver<Client>>();
         
-        public Client(NetworkStream Stream, TcpClient Client, string userName)
+        public Client(NetworkStream Stream, TcpClient Client)
         {
             stream = Stream;
             client = Client;
