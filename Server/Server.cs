@@ -14,16 +14,12 @@ namespace Server
     {
         public static Client client;
         TcpListener listener;
-
-        private Queue<Message> queueMessages; 
-
+        private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
         int UserId;
-     
-
-
         private Object DictionaryLock;
         private static bool isServerOpen;
+        List<int> Connections = new List<int>();
         public static bool IsServerOpen
         {
             get
@@ -94,5 +90,15 @@ namespace Server
         {
             return queueMessages.Dequeue();
         }
-    }
+
+       // public void SendToAll(socket, string message)
+        //{
+           // Connections.Add(socket)
+           // for(int i = 0; i < Connections.Count; i++);
+           // {                
+               // Socket tempSocket = 
+                //client.Send(clientMessage);
+           // }
+        //}
+}
 }
