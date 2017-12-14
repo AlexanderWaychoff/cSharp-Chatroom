@@ -74,11 +74,11 @@ namespace Server
                     clientSocket = listener.AcceptTcpClient();
                     Console.WriteLine("Connection Initiated");
                     NetworkStream stream = clientSocket.GetStream();
-                    client = new Client(stream, clientSocket);
                     userName = client.Receive();
-                    client.userInfo.Add(UserId, userName);
+                    client = new Client(stream, clientSocket, userName);
+                    client.userInfo.Add(UserId, client);
+                    //client.subscribers.Add(client);
                     UserId += 1;
-                    Respond(userName + " has joined.");
                 }
             });
         }
