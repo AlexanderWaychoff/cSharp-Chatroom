@@ -18,7 +18,7 @@ namespace Server
         private Queue<Message> queueMessages; 
 
         private Object QueueLock = new Object();
-        int UserId;
+        int UserId = 1;
      
 
 
@@ -58,6 +58,8 @@ namespace Server
                         //{
                             string userName = client.Receive();
                             Respond(userName + " has joined.");
+                        client.userInfo.Add(UserId, userName);
+                        UserId += 1;
                         //}                      
 
                     }

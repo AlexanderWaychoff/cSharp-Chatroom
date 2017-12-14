@@ -62,16 +62,31 @@ namespace Client
         {
             return Task.Run(() =>
             {
-                string messageString = UI.GetInput();
-                byte[] message = Encoding.ASCII.GetBytes(messageString);
-                stream.Write(message, 0, message.Count());
+                try
+                {
+                    string messageString = UI.GetInput();
+                    byte[] message = Encoding.ASCII.GetBytes(messageString);
+                    stream.Write(message, 0, message.Count());
+                }
+                catch
+                {
+                    IsConnected = false;
+                }
             });
         }
         public void Receive()
         {
-            byte[] recievedMessage = new byte[256];
-            stream.Read(recievedMessage, 0, recievedMessage.Length);
-            UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
+            try
+            {
+                byte[] recievedMessage = new byte[256];
+                stream.Read(recievedMessage, 0, recievedMessage.Length);
+                UI.DisplayMessage(Encoding.ASCII.GetString(recievedMessage));
+            }
+            catch
+            {
+                Console.WriteLine("Connection was lost!");
+                IsConnected = false;
+            }
         }
 
         public void GetUsername()
