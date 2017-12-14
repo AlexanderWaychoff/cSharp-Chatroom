@@ -10,23 +10,19 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class Server
+    class Server : ILogger
     {
         public static Client client;
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
-<<<<<<< HEAD
-        int UserId;
-        private Object DictionaryLock;
-=======
         int UserId = 1;
         string userName;
      
 
 
         private Object AcceptClientLock = new Object();
->>>>>>> d27df804b84bde527081414331f515dd849b3655
+
         private static bool isServerOpen;
         List<int> Connections = new List<int>();
         public static bool IsServerOpen
