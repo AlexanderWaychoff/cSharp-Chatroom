@@ -16,14 +16,15 @@ namespace Server
         public static Client client;
         TcpListener listener;
         private Queue<Message> queueMessages;
-        private Object QueueLock = new Object();
-        private ILogger Logger;
+        private Object QueueLock = new Object();                
         private Object DictionaryLock = new Object();
+        private ILog Logger;
         int UserId = 1;
         string userName;
         private Object AcceptClientLock = new Object();
         private static bool isServerOpen;
         List<int> Connections = new List<int>();
+
         public static bool IsServerOpen
         {
             get
