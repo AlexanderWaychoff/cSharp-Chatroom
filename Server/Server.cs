@@ -16,6 +16,7 @@ namespace Server
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
+        private ILogger ILog;
         int UserId = 1;
         string userName;
      
@@ -56,6 +57,7 @@ namespace Server
                         AcceptClient();
                         string message = client.Receive();
                         Respond(message);
+                        ILog.LogMessage(message);
                     }
                     catch
                     {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,9 +9,23 @@ namespace Server
 {
     class ILogger
     {
-        public void LogMessage()
+        private Object LogKey = new object();
+        string path = "log.txt";
+                
+        public void LogMessage(string message)
         {
-
+            lock (LogKey)
+            {
+                using (StreamWriter write = File.AppendText(path))
+                {
+                        write.WriteLine(message);
+                }
+            }
         }
+
+
+
+
     }
 }
+
