@@ -16,12 +16,9 @@ namespace Server
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
-        private ILogger ILog;
+        private ILogger Logger;
         int UserId = 1;
         string userName;
-     
-
-
         private Object AcceptClientLock = new Object();
 
         private static bool isServerOpen;
@@ -37,13 +34,14 @@ namespace Server
                 isServerOpen = value;
             }
         }
-        public Server()
+        public Server(ILogger)
 
         {
             queueMessages = new Queue<Message>();
             int port = 9999;            
             listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")
             listener.Start();
+        
         }
         public Task Run()
         {
@@ -57,7 +55,7 @@ namespace Server
                         AcceptClient();
                         string message = client.Receive();
                         Respond(message);
-                        ILog.LogMessage(message);
+                        Logger.JoinChat();
                     }
                     catch
                     {
