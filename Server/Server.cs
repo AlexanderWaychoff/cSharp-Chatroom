@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -16,6 +17,7 @@ namespace Server
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
+        private Object DictionaryLock = new Object();
         private ILogger ILog;
         int UserId = 1;
         string userName;
@@ -58,13 +60,25 @@ namespace Server
                         string message = client.Receive();
                         Respond(message);
                         ILog.LogMessage(message);
+                        Broadcast(message);
                     }
                     catch
                     {
 
                     }
+                    //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
                 }
             });
+        }
+        private void Broadcast(string message)
+        {
+            lock (DictionaryLock)
+            {
+                foreach (var user in client.userInfo)
+                {
+                    user.Value.Send(message);
+                }
+            }
         }
         private Task AcceptClient()
         {
@@ -76,9 +90,8 @@ namespace Server
                     clientSocket = listener.AcceptTcpClient();
                     Console.WriteLine("Connection Initiated");
                     NetworkStream stream = clientSocket.GetStream();
-                    userName = client.Receive();
                     client = new Client(stream, clientSocket, userName);
-                    client.userInfo.Add(UserId, client);
+                    lock (DictionaryLock) client.userInfo.Add(UserId, client);
                     //client.subscribers.Add(client);
                     UserId += 1;
                 }
