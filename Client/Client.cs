@@ -103,8 +103,16 @@ namespace Client
         {
             return Task.Run(() =>
             {
-                Parallel.Invoke(Send(), Receive());
-            });        
+                Parallel.Invoke(() =>
+                    {
+                        Send();
+                    },
+                    () =>
+                    {
+                        Receive();
+                    }
+                );
+            });    
         }
         
     }
