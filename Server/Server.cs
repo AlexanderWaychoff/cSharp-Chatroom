@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -17,10 +18,10 @@ namespace Server
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();
         private ILogger Logger;
+        private Object DictionaryLock = new Object();
         int UserId = 1;
         string userName;
         private Object AcceptClientLock = new Object();
-
         private static bool isServerOpen;
         List<int> Connections = new List<int>();
         public static bool IsServerOpen
@@ -34,7 +35,7 @@ namespace Server
                 isServerOpen = value;
             }
         }
-        public Server(ILogger)
+        public Server()
 
         {
             queueMessages = new Queue<Message>();
@@ -55,14 +56,26 @@ namespace Server
                         AcceptClient();
                         string message = client.Receive();
                         Respond(message);
-                        Logger.JoinChat();
+                        Logger.JoinChat();                        
+                        Broadcast(message);
                     }
                     catch
                     {
 
                     }
+                    //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
                 }
             });
+        }
+        private void Broadcast(string message)
+        {
+            lock (DictionaryLock)
+            {
+                foreach (var user in client.userInfo)
+                {
+                    user.Value.Send(message);
+                }
+            }
         }
         private Task AcceptClient()
         {
@@ -74,9 +87,8 @@ namespace Server
                     clientSocket = listener.AcceptTcpClient();
                     Console.WriteLine("Connection Initiated");
                     NetworkStream stream = clientSocket.GetStream();
-                    userName = client.Receive();
                     client = new Client(stream, clientSocket, userName);
-                    client.userInfo.Add(UserId, client);
+                    lock (DictionaryLock) client.userInfo.Add(UserId, client);
                     //client.subscribers.Add(client);
                     UserId += 1;
                 }

@@ -20,7 +20,7 @@ namespace Server
         {
             stream = Stream;
             client = Client;
-            this.userName = userName;
+            this.userName = Receive();
             UserId = "495933b6-1762-47a1-b655-483510072e73";
         }
         public void Send(string Message)
