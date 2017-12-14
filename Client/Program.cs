@@ -14,9 +14,8 @@ namespace Client
             Client client = new Client("127.0.0.1", 9999);
             client.SendName();      
             while (client.IsConnected)
-            {                
-                client.Send();
-                client.Receive();
+            {
+                client.Chat();
             }
 
             Console.ReadLine();
