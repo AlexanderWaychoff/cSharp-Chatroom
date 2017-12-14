@@ -22,6 +22,7 @@ namespace Server
         int UserId = 1;
         private Object AcceptClientLock = new Object();
         private static bool isServerOpen;
+        private static bool areUsersConnected = false;
         List<int> Connections = new List<int>();
 
         public static bool IsServerOpen
@@ -54,14 +55,18 @@ namespace Server
                     try
                     {
                         AcceptClient();
-                        string message = client.Receive();
-                        Respond(message);
-                        Logger.JoinChat();                        
-                        Broadcast(message);
+                        Logger.JoinChat();
+                        AddToQueue(client.userName, client);
                     }
                     catch
                     {
 
+                    }
+                    while (areUsersConnected)
+                    {
+                        string message = client.Receive();
+                        Respond(message);
+                        Broadcast(message);
                     }
                     //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
                 }
@@ -74,6 +79,7 @@ namespace Server
                 foreach (var user in client.userInfo)
                 {
                     user.Value.Send(message);
+                    Console.WriteLine(user.ToString());
                 }
             }
         }
@@ -89,6 +95,7 @@ namespace Server
                     NetworkStream stream = clientSocket.GetStream();
                     client = new Client(stream, clientSocket);
                     lock (DictionaryLock) client.userInfo.Add(UserId, client);
+                    areUsersConnected = true;
                     //client.subscribers.Add(client);
                     UserId += 1;
                 }
