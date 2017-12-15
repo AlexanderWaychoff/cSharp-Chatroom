@@ -50,23 +50,24 @@ namespace Server
             listener.Start();
         
         }
-        public Task Run()
+        public void Run()
         {
-            return Task.Run(() =>
-            {
-                Thread myThread;
-                myThread = new Thread(new ThreadStart(WaitToBroadcast));
-                myThread.Start();
-                clientListeners.Add(myThread);
-                isServerOpen = true;
-                if (!isListening)
-                {
-                    isListening = true;
-                    while (isServerOpen)
-                    {
-                        ListenForClients();
-                    }
-                }
+            IsServerOpen = true;
+            Task.Run(() => AcceptClient());
+            //{
+                //Thread myThread;
+                //myThread = new Thread(new ThreadStart(WaitToBroadcast));
+                //myThread.Start();
+                //clientListeners.Add(myThread);
+                //isServerOpen = true;
+                //if (!isListening)
+                //{
+                //    isListening = true;
+                //    while (isServerOpen)
+                //    {
+                //        ListenForClients();
+                //    }
+                //}
                 //while (isServerOpen)
                 //{
                 //    try
@@ -93,38 +94,22 @@ namespace Server
                 //    }
                 //    //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
                 //}
-            });
+            //});
         }
-        public async void ListenForClients()
+        public void ListenForClients()
         {
-            await AcceptClient();
-            Thread myThread;
-            myThread = new Thread(new ThreadStart(HoldClientListeners));
-            myThread.Start();
-            clientListeners.Add(myThread);
-        }
-        public async void HoldClientListeners()
-        {
-            while(isServerOpen)
+            while (IsServerOpen)
             {
                 try
                 {
-                    await WaitForMessage();
-                    lock (LimitClientActionLock)
-                    {
-                        hasMessageToSend = true;
-                        while(hasMessageToSend)
-                        {
-
-                        }
-                    }
-                    //string message = client.Receive();
-                    //Respond(message);
-                    //Broadcast(message);
-
-                    //await Task.Run(() => AcceptClient());
-                    //Logger.JoinChat();
-                    //AddToQueue(client.userName, client);
+                    AcceptClient();
+                    //Thread myThread;
+                    //myThread = new Thread(new ThreadStart(HoldClientListeners));
+                    //myThread.Start();
+                    //clientListeners.Add(myThread);
+                    message = clientCommands.Receive();
+                    //Task.Run(() => clientCommands.Receive());
+                    Task.Run(() => Broadcast(message));
                 }
                 catch
                 {
@@ -132,57 +117,89 @@ namespace Server
                 }
             }
         }
-        public Task WaitForMessage()
-        {
-            return Task.Run(() =>
-            {
-                while (!hasMessageToSend)
-                {
-                    lock (DictionaryLock)
-                    {
-                        foreach (KeyValuePair<int, Client> client in clientCommands.userInfo)
-                        {
-                            message = client.Value.Receive();
-                            if (message != null)
-                            {
-                                lock (LimitClientActionLock)
-                                {
-                                    hasMessageToSend = true;
-                                    Broadcast(client.Value.userName.ToString() + ": " + message);
-                                }
-                            }
-                        }
-                    }
-                }
+        //public async void HoldClientListeners()
+        //{
+        //    while(isServerOpen)
+        //    {
+        //        try
+        //        {
+        //            await WaitForMessage();
+        //            lock (LimitClientActionLock)
+        //            {
+        //                hasMessageToSend = true;
+        //                while(hasMessageToSend)
+        //                {
 
-            });
-        }
-        private void WaitToBroadcast()
-        {
-            while(isServerOpen)
-            {
-                if(hasMessageToSend)
-                {
-                    Broadcast(message);
-                    hasMessageToSend = false;
-                }
-            }
-        }
-        private void Broadcast(string message)
+        //                }
+        //            }
+        //            //string message = client.Receive();
+        //            //Respond(message);
+        //            //Broadcast(message);
+
+        //            //await Task.Run(() => AcceptClient());
+        //            //Logger.JoinChat();
+        //            //AddToQueue(client.userName, client);
+        //        }
+        //        catch
+        //        {
+
+        //        }
+        //    }
+        //}
+        //public Task WaitForMessage()
+        //{
+        //    return Task.Run(() =>
+        //    {
+        //        while (!hasMessageToSend)
+        //        {
+        //            lock (DictionaryLock)
+        //            {
+        //                foreach (KeyValuePair<int, Client> client in clientCommands.userInfo)
+        //                {
+        //                    message = client.Value.Receive();
+        //                    if (message != null)
+        //                    {
+        //                        lock (LimitClientActionLock)
+        //                        {
+        //                            hasMessageToSend = true;
+        //                            //Broadcast(client.Value.userName.ToString() + ": " + message);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+
+        //    });
+        //}
+        //private void WaitToBroadcast()
+        //{
+        //    while(isServerOpen)
+        //    {
+        //        if (hasMessageToSend)
+        //        {
+        //            Broadcast(message);
+        //            hasMessageToSend = false;
+        //        }
+        //    }
+        //}
+        public void Broadcast(string message)
         {
             lock (DictionaryLock)
             {
-                foreach (var user in clientCommands.userInfo)
+                //Client filter;
+                foreach (KeyValuePair<int, Client> user in clientCommands.userInfo)
                 {
                     user.Value.Send(message);
-                    Console.WriteLine(user.ToString());
+                    
                 }
-                hasMessageToSend = false;
+                //hasMessageToSend = false;
             }
         }
-        private Task AcceptClient()
+        private void AcceptClient()
         {
-            return Task.Run(() =>
+            //return Task.Run(() =>
+            //{
+            while (isServerOpen)
             {
                 lock (AcceptClientLock)
                 {
@@ -195,8 +212,20 @@ namespace Server
                     areUsersConnected = true;
                     //client.subscribers.Add(client);
                     UserId += 1;
+                    Task.Run(() => Receive());
+                    //Task.Run(() => Broadcast(message));
+
                 }
-            });
+            }
+            //});
+        }
+        private void Receive()
+        {
+            while (isServerOpen)
+            {
+                message = clientCommands.Receive();
+                Task.Run(() => Broadcast(message));
+            }
         }
         public void Respond(string body)
         {

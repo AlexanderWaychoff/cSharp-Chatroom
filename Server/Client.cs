@@ -11,6 +11,7 @@ namespace Server
     {
         NetworkStream stream;
         TcpClient client;
+        //Server server = new Server();
         public string UserId;
         public string userName;
         Object ReceiveLock = new Object();
@@ -19,7 +20,7 @@ namespace Server
 
         public Client()
         {
-
+            //this.server = server;
         }
         public Client(NetworkStream Stream, TcpClient Client)
         {
@@ -33,16 +34,24 @@ namespace Server
             byte[] message = Encoding.ASCII.GetBytes(Message);
             stream.Write(message, 0, message.Count());
         }
-        public string Receive()
+        public string Receive() //string
         {
-            byte[] recievedMessage = new byte[256];
-            lock (ReceiveLock)
-            {
-                stream.Read(recievedMessage, 0, recievedMessage.Length);
-                string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
-                Console.WriteLine(recievedMessageString);
-                return recievedMessageString;
-            }
+                //lock (ReceiveLock)
+                //{
+                    //try
+                    //{
+                        byte[] recievedMessage = new byte[256];
+                        stream.Read(recievedMessage, 0, recievedMessage.Length);
+                        string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
+                        Console.WriteLine(recievedMessageString);
+                        //Task.Run(() => server.Broadcast(recievedMessageString));
+                        return recievedMessageString;
+                    //}
+                    //catch
+                    //{
+                    //    return "";
+                    //}
+//}
         }        
     }
 }
