@@ -62,21 +62,23 @@ namespace Client
         {
             return Task.Run(() =>
             {
-                try
+                while (IsConnected)
                 {
-                    string messageString = UI.GetInput();
-                    byte[] message = Encoding.ASCII.GetBytes(messageString);
-                    stream.Write(message, 0, message.Count());
-                }
-                catch
-                {
-                    IsConnected = false;
+                    try
+                    {
+                        string messageString = UI.GetInput();
+                        byte[] message = Encoding.ASCII.GetBytes(messageString);
+                        stream.Write(message, 0, message.Count());
+                    }
+                    catch
+                    {
+                        IsConnected = false;
+                    }
                 }
             });
         }
         public Task Receive()
         {
-
             return Task.Run(() =>
             {
                 while (IsConnected)
@@ -102,20 +104,17 @@ namespace Client
             username = Console.ReadLine();
         }
 
-        public Task Chat()
+        public void Chat()
         {
-            return Task.Run(() =>
-            {
-                Parallel.Invoke(() =>
-                    {
-                        Send();
-                    },
-                    () =>
-                    {
-                        Receive();
-                    }
-                );
-            });    
+            Parallel.Invoke(() =>
+                {
+                    Send();
+                },
+                () =>
+                {
+                    Receive();
+                }
+            );  
         }
         
     }

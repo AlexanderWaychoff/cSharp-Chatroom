@@ -18,11 +18,15 @@ namespace Server
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();                
         private Object DictionaryLock = new Object();
+        private Object LimitClientActionLock = new Object();
         private ILog Logger;
         int UserId = 1;
+        string message;
         private Object AcceptClientLock = new Object();
         private static bool isServerOpen;
         private static bool areUsersConnected = false;
+        private static bool isListening = false;
+        private static bool hasMessageToSend = false;
         List<int> Connections = new List<int>();
 
         public static bool IsServerOpen
@@ -49,28 +53,111 @@ namespace Server
         {
             return Task.Run(() =>
             {
+                Thread myThread;
+                myThread = new Thread(new ThreadStart(WaitToBroadcast));
+                myThread.Start();
                 isServerOpen = true;
-                while (isServerOpen)
+                if (!isListening)
                 {
-                    try
+                    isListening = true;
+                    while (isServerOpen)
                     {
-                        AcceptClient();
-                        Logger.JoinChat();
-                        AddToQueue(client.userName, client);
+                        ListenForClients();
                     }
-                    catch
-                    {
-
-                    }
-                    while (areUsersConnected)
-                    {
-                        string message = client.Receive();
-                        Respond(message);
-                        Broadcast(message);
-                    }
-                    //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
                 }
+                //while (isServerOpen)
+                //{
+                //    try
+                //    {
+                //        await WaitForMessage();
+                //        //string message = client.Receive();
+                //        //Respond(message);
+                //        Broadcast(message);
+
+                //        //await Task.Run(() => AcceptClient());
+                //        //Logger.JoinChat();
+                //        //AddToQueue(client.userName, client);
+                //    }
+                //    catch
+                //    {
+
+                //    }
+                //    while (areUsersConnected)
+                //    {
+                //        await WaitForMessage();
+                //        //string message = client.Receive();
+                //        //Respond(message);
+                //        Broadcast(message);
+                //    }
+                //    //while((i = Stream.Read(bytes, 0, bytes.Length)) != 0)
+                //}
             });
+        }
+        public async void ListenForClients()
+        {
+            await AcceptClient();
+            Thread myThread;
+            myThread = new Thread(new ThreadStart(HoldClientListeners));
+            myThread.Start();
+        }
+        public async void HoldClientListeners()
+        {
+            while(isServerOpen)
+            {
+                try
+                {
+                    await WaitForMessage();
+                    lock (LimitClientActionLock)
+                    {
+                        hasMessageToSend = true;
+                        while(hasMessageToSend)
+                        {
+
+                        }
+                    }
+                    //string message = client.Receive();
+                    //Respond(message);
+                    //Broadcast(message);
+
+                    //await Task.Run(() => AcceptClient());
+                    //Logger.JoinChat();
+                    //AddToQueue(client.userName, client);
+                }
+                catch
+                {
+
+                }
+            }
+        }
+        public Task WaitForMessage()
+        {
+            return Task.Run(() =>
+            {
+                while (!hasMessageToSend)
+                {
+                    message = client.Receive();
+                    if (message != null)
+                    {
+                        lock (LimitClientActionLock)
+                        {
+                            hasMessageToSend = true;
+                            Broadcast(message);
+                        }
+                    }
+                }
+
+            });
+        }
+        private void WaitToBroadcast()
+        {
+            while(isServerOpen)
+            {
+                if(hasMessageToSend)
+                {
+                    Broadcast(message);
+                    hasMessageToSend = false;
+                }
+            }
         }
         private void Broadcast(string message)
         {
@@ -81,6 +168,7 @@ namespace Server
                     user.Value.Send(message);
                     Console.WriteLine(user.ToString());
                 }
+                hasMessageToSend = false;
             }
         }
         private Task AcceptClient()
