@@ -36,17 +36,24 @@ namespace Server
         }
         public string Receive() //string
         {
-                //lock (ReceiveLock)
-                //{
-                    //try
-                    //{
-                        byte[] recievedMessage = new byte[256];
-                        stream.Read(recievedMessage, 0, recievedMessage.Length);
-                        string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
-                        Console.WriteLine(recievedMessageString);
-                        //Task.Run(() => server.Broadcast(recievedMessageString));
-                        return recievedMessageString;
-                    //}
+            lock (ReceiveLock)
+            {
+                try
+                {
+
+                    byte[] recievedMessage = new byte[256];
+                    stream.Read(recievedMessage, 0, recievedMessage.Length);
+                    string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
+                    Console.WriteLine(recievedMessageString);
+
+                    //Task.Run(() => server.Broadcast(recievedMessageString));
+                    return recievedMessageString;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
                     //catch
                     //{
                     //    return "";

@@ -77,10 +77,10 @@ namespace Client
                 }
             });
         }
-        public Task Receive()
+        public void Receive()
         {
-            return Task.Run(() =>
-            {
+            //return Task.Run(() =>
+            //{
                 while (IsConnected)
                 {
                     try
@@ -95,7 +95,7 @@ namespace Client
                         IsConnected = false;
                     }
                 }
-            });
+            //});
         }
 
         public void GetUsername()
@@ -106,15 +106,21 @@ namespace Client
 
         public void Chat()
         {
-            Parallel.Invoke(() =>
-                {
-                    Send();
-                },
-                () =>
-                {
-                    Receive();
-                }
-            );  
+            //replace Parallel.Invoke or find a way for it to only check send once
+            //Parallel.Invoke(() =>
+            //    {
+            //        var t = Task.Run(() => Send());
+            //        t.Wait();
+            //    },
+            //    () =>
+            //    {
+            //        Receive();
+
+            //    }
+            //);  
+            Task.Run(() => Receive());
+            var t = Task.Run(() => Send());
+            t.Wait();
         }
         
     }
