@@ -13,7 +13,7 @@ namespace Server
 {
     class Server : ILogger
     {
-        public static Client client;
+        Client clientCommands = new Client();
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();                
@@ -28,6 +28,7 @@ namespace Server
         private static bool isListening = false;
         private static bool hasMessageToSend = false;
         List<int> Connections = new List<int>();
+        static List<Thread> clientListeners = new List<Thread>();
 
         public static bool IsServerOpen
         {
@@ -56,6 +57,7 @@ namespace Server
                 Thread myThread;
                 myThread = new Thread(new ThreadStart(WaitToBroadcast));
                 myThread.Start();
+                clientListeners.Add(myThread);
                 isServerOpen = true;
                 if (!isListening)
                 {
@@ -99,6 +101,7 @@ namespace Server
             Thread myThread;
             myThread = new Thread(new ThreadStart(HoldClientListeners));
             myThread.Start();
+            clientListeners.Add(myThread);
         }
         public async void HoldClientListeners()
         {
@@ -135,13 +138,19 @@ namespace Server
             {
                 while (!hasMessageToSend)
                 {
-                    message = client.Receive();
-                    if (message != null)
+                    lock (DictionaryLock)
                     {
-                        lock (LimitClientActionLock)
+                        foreach (KeyValuePair<int, Client> client in clientCommands.userInfo)
                         {
-                            hasMessageToSend = true;
-                            Broadcast(message);
+                            message = client.Value.Receive();
+                            if (message != null)
+                            {
+                                lock (LimitClientActionLock)
+                                {
+                                    hasMessageToSend = true;
+                                    Broadcast(message);
+                                }
+                            }
                         }
                     }
                 }
@@ -163,7 +172,7 @@ namespace Server
         {
             lock (DictionaryLock)
             {
-                foreach (var user in client.userInfo)
+                foreach (var user in clientCommands.userInfo)
                 {
                     user.Value.Send(message);
                     Console.WriteLine(user.ToString());
@@ -181,8 +190,8 @@ namespace Server
                     clientSocket = listener.AcceptTcpClient();
                     Console.WriteLine("Connection Initiated");
                     NetworkStream stream = clientSocket.GetStream();
-                    client = new Client(stream, clientSocket);
-                    lock (DictionaryLock) client.userInfo.Add(UserId, client);
+                    Client client = new Client(stream, clientSocket);
+                    lock (DictionaryLock) clientCommands.userInfo.Add(UserId, client);
                     areUsersConnected = true;
                     //client.subscribers.Add(client);
                     UserId += 1;
@@ -191,7 +200,7 @@ namespace Server
         }
         public void Respond(string body)
         {
-             client.Send(body);            
+             clientCommands.Send(body);            
         }
 
         private void AddToQueue(string message, Client client)

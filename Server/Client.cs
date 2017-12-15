@@ -13,9 +13,14 @@ namespace Server
         TcpClient client;
         public string UserId;
         public string userName;
+        Object ReceiveLock = new Object();
         public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
         //public List<IObserver<Client>> subscribers = new List<IObserver<Client>>();
-        
+
+        public Client()
+        {
+
+        }
         public Client(NetworkStream Stream, TcpClient Client)
         {
             stream = Stream;
@@ -31,10 +36,13 @@ namespace Server
         public string Receive()
         {
             byte[] recievedMessage = new byte[256];
-            stream.Read(recievedMessage, 0, recievedMessage.Length);
-            string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
-            Console.WriteLine(recievedMessageString);
-            return recievedMessageString;
+            lock (ReceiveLock)
+            {
+                stream.Read(recievedMessage, 0, recievedMessage.Length);
+                string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
+                Console.WriteLine(recievedMessageString);
+                return recievedMessageString;
+            }
         }        
     }
 }

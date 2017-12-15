@@ -13,7 +13,7 @@ namespace Server
             new Server().Run();
             while (Server.IsServerOpen)
             {
-                string message = Server.client.Receive();
+                //string message = Server.client.Receive();
                 //Server.Respond(message);
             }
             Console.ReadLine();
