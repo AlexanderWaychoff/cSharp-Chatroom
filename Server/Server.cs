@@ -148,7 +148,7 @@ namespace Server
                                 lock (LimitClientActionLock)
                                 {
                                     hasMessageToSend = true;
-                                    Broadcast(message);
+                                    Broadcast(client.Value.userName.ToString() + ": " + message);
                                 }
                             }
                         }
