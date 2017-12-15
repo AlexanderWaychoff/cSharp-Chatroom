@@ -34,7 +34,8 @@ namespace Server
         private static bool hasMessageToSend = false;
         List<int> Connections = new List<int>();
         static List<Client> clientListeners = new List<Client>();
-        static List<Thread> threadListeners = new List<Thread>();
+        static List<Thread> threadReceiveListeners = new List<Thread>();
+        static List<Thread> threadConnectionListeners = new List<Thread>();
 
         public static bool IsServerOpen
         {
@@ -62,6 +63,24 @@ namespace Server
             Task.Run(() => AcceptClient());
         }
         public void Broadcast(string sendMessage)
+        {
+            int key = 0;
+            for (int i = 0; i < clientListeners.Count; i++)
+            {
+                try
+                {
+                    clientListeners[i].Send(sendMessage);
+                }
+                catch
+                {
+                    Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
+                    userInfo.Remove(i);
+                    clientListeners.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+        public void BroadcastDupe(string sendMessage)
         {
             Client filter;
             foreach (KeyValuePair<int, Client> user in userInfo)
@@ -93,22 +112,50 @@ namespace Server
                 if (!needThreads)
                 {
                     needThreads = true;
-                    Task.Run(() => CreateThreads());
+                    Task.Run(() => CreateThreadsForReceive());
                 }
             }
         }
-        private void CreateThreads()
+        private void CreateThreadsForReceive()
         {
             int i = 0;
             while (isServerOpen)
             {
-                for (i = 0; threadListeners.Count < clientListeners.Count; i++)
+                try
                 {
-                    Thread listener = new Thread(new ThreadStart(Receive));
-                    threadListeners.Add(listener);
+                    for (i = 0; threadReceiveListeners.Count < clientListeners.Count; i++)
+                    {
+                        Thread listener = new Thread(new ThreadStart(Receive));
+                        threadReceiveListeners.Add(listener);
+                        listener.Start();
+                    }
+                    threadReceiveListeners.Clear();
+                }
+                catch
+                {
+                    //throw new Exception(OutOfMemoryException);
+                }
+            }
+        }
+        private void CreateThreadsForClientConnectionStatus()
+        {
+            int i = 0;
+            while (isServerOpen)
+            {
+                for (i = 0; threadReceiveListeners.Count < clientListeners.Count; i++)
+                {
+                    Thread listener = new Thread(new ThreadStart(TestClientConnection));
+                    threadReceiveListeners.Add(listener);
                     listener.Start();
                 }
-                threadListeners.Clear();
+                threadReceiveListeners.Clear();
+            }
+        }
+        private void TestClientConnection()
+        {
+            for(int i = 0; i < userInfo.Count; i++)
+            {
+                
             }
         }
         private void Receive()
@@ -131,12 +178,23 @@ namespace Server
                 }
                 message = null;
             }
-            threadListeners.Clear();
+            threadReceiveListeners.Clear();
         }
         public void Respond(string body)
         {
              client.Send(body);            
         }
+        //public static bool IsConnected(this Socket socket)
+        //{
+        //    try
+        //    {
+        //        return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
+        //    }
+        //    catch (SocketException)
+        //    {
+        //        return false;
+        //    }
+        //}
 
         private void AddToQueue(string message, Client client)
         {
