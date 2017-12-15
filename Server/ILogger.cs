@@ -18,7 +18,7 @@ namespace Server
             {
                 using (StreamWriter write = File.AppendText(path))
                 {
-                    write.WriteLine(message);
+                    write.WriteLine(message + DateTime.Now.ToLongTimeString());                    
                 }
             }
         }
@@ -29,7 +29,7 @@ namespace Server
             {
                 using (StreamWriter write = File.AppendText(path))
                 {
-                    write.WriteLine(userName + "has joined the chat");
+                    write.WriteLine(userName + "has joined the chat " + DateTime.Now.ToLongTimeString());                    
                 }
             }
         }
@@ -40,7 +40,7 @@ namespace Server
             {
                 using (StreamWriter write = File.AppendText(path))
                 {
-                    write.WriteLine(userName + "has left the chat");
+                    write.WriteLine(userName + "has left the chat " + DateTime.Now.ToLongTimeString());                    
                 }
             }
         }
