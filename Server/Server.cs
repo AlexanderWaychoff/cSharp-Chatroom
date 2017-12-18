@@ -13,7 +13,6 @@ namespace Server
 {
     class Server : TextLogger
     {
-        Client clientCommands = new Client();
         Client client;
         public Dictionary<int, Client> allSubscribers = new Dictionary<int, Client>();
         TcpListener listener;
@@ -23,24 +22,21 @@ namespace Server
         private Object LimitClientActionLock = new Object();
         private Object BroadcastLock = new Object();
         private Object ReceiveLock = new Object();
+        private Object AcceptClientLock = new Object();
         ILog textLogger;
         int UserId = 0;
         int clientListenerIndexCounter = 0;
         private int saveClientIndexCounter = 0;
-        private string disconnected = " disconnected."; //dependency inject this later; in Receive method
+        private string disconnected = " disconnected.";
         private string saveUserName;
         string message = null;
         string previousMessage = null;
-        private Object AcceptClientLock = new Object();
         private bool needThreads = false;
         private static bool isServerOpen;
-        private static bool areUsersConnected = false;
-        private static bool isListening = false;
-        private static bool hasMessageToSend = false;
-        List<int> Connections = new List<int>();
-        static List<Client> clientListeners = new List<Client>();
-        static List<Thread> threadReceiveListeners = new List<Thread>();
-        static List<Thread> threadConnectionListeners = new List<Thread>();
+        private bool areUsersConnected = false;
+        List<Client> clientListeners = new List<Client>();
+        List<Thread> threadReceiveListeners = new List<Thread>();
+        List<Thread> threadConnectionListeners = new List<Thread>();
 
 
 
@@ -62,7 +58,7 @@ namespace Server
             textLogger = logger;
             queueMessages = new Queue<string>();
             int port = 9999;            
-            listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")
+            listener = new TcpListener(IPAddress.Any, port);
             listener.Start();
         
         }
@@ -87,10 +83,9 @@ namespace Server
                     catch
                     {
                         Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
-                        clientListeners[i].stream.Close();
+                        clientListeners[i].Stream.Close();
                         allSubscribers.Remove(i);
                         clientListeners.RemoveAt(i);
-                        //Broadcast(clientListeners[i].userName.ToString() + " has disconnected.", i + 1);
                         i--;
                     }
                 }
@@ -134,33 +129,11 @@ namespace Server
                             listener.Start();
                         }
                     }
-                    //threadReceiveListeners.Clear();
                 }
                 catch
                 {
-                    //throw new Exception(OutOfMemoryException);
+                    
                 }
-            }
-        }
-        private void CreateThreadsForClientConnectionStatus()
-        {
-            int i = 0;
-            while (isServerOpen)
-            {
-                for (i = 0; threadReceiveListeners.Count < clientListeners.Count; i++)
-                {
-                    Thread listener = new Thread(new ThreadStart(TestClientConnection));
-                    threadReceiveListeners.Add(listener);
-                    listener.Start();
-                }
-                threadReceiveListeners.Clear();
-            }
-        }
-        private void TestClientConnection()
-        {
-            for(int i = 0; i < allSubscribers.Count; i++)
-            {
-                
             }
         }
         private void Receive()
@@ -186,7 +159,6 @@ namespace Server
                     {
                         saveClientIndexCounter = clientListenerIndexCounter;
                         saveUserName = clientListeners[saveClientIndexCounter].userName;
-                        //clientListeners.RemoveAt(saveClientIndexCounter);
                         Broadcast(saveUserName + disconnected);
                         message = null;
                         AddToQueue(message);
@@ -226,27 +198,10 @@ namespace Server
                 }
                 catch
                 {
-                    //Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
-                    //allSubscribers.Remove(i);
-                    //clientListeners.RemoveAt(i);
-                    //i--;
+
                 }
             }
         }
-
-
-        //public static bool IsConnected(this Socket socket)
-        //{
-        //    try
-        //    {
-        //        return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
-        //    }
-        //    catch (SocketException)
-        //    {
-        //        return false;
-        //    }
-        //}
-
         private void AddToQueue(string message)
         {
             lock(QueueLock)
@@ -259,15 +214,5 @@ namespace Server
         {
             queueMessages.Dequeue();            
         }
-
-       // public void SendToAll(socket, string message)
-        //{
-           // Connections.Add(socket)
-           // for(int i = 0; i < Connections.Count; i++);
-           // {                
-               // Socket tempSocket = 
-                //client.Send(clientMessage);
-           // }
-        //}
-}
+    }
 }

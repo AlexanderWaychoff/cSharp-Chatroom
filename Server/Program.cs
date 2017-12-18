@@ -12,11 +12,6 @@ namespace Server
         {
             TextLogger textLogger = new TextLogger();
             new Server(textLogger).Run();
-            while (Server.IsServerOpen)
-            {
-                //string message = Server.client.Receive();
-                //Server.Respond(message);
-            }
             Console.ReadLine();
         }
     }

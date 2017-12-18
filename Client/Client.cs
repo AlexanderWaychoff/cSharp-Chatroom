@@ -111,18 +111,6 @@ namespace Client
 
         public void Chat()
         {
-            //replace Parallel.Invoke or find a way for it to only check send once
-            //Parallel.Invoke(() =>
-            //    {
-            //        var t = Task.Run(() => Send());
-            //        t.Wait();
-            //    },
-            //    () =>
-            //    {
-            //        Receive();
-
-            //    }
-            //);  
             Task.Run(() => Receive());
             var t = Task.Run(() => Send());
             t.Wait();
