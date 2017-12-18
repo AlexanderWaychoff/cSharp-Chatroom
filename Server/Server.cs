@@ -124,11 +124,14 @@ namespace Server
             {
                 try
                 {
-                    for (i = 0; i < clientListeners.Count; i++)
+                    if (threadReceiveListeners.Count < clientListeners.Count)
                     {
-                        Thread listener = new Thread(new ThreadStart(Receive));
-                        threadReceiveListeners.Add(listener);
-                        listener.Start();
+                        for (i = threadReceiveListeners.Count; i < clientListeners.Count; i++)
+                        {
+                            Thread listener = new Thread(new ThreadStart(Receive));
+                            threadReceiveListeners.Add(listener);
+                            listener.Start();
+                        }
                     }
                     //threadReceiveListeners.Clear();
                 }

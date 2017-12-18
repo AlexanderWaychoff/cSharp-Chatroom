@@ -15,6 +15,7 @@ namespace Server
         public string UserId;
         public string userName = "";
         private string disconnected = " disconnected.";
+        private bool isReceiving = false;
         Object ReceiveLock = new Object();
         public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
         //public List<IObserver<Client>> subscribers = new List<IObserver<Client>>();
@@ -37,26 +38,30 @@ namespace Server
         }
         public string Receive() //string
         {
-            lock (ReceiveLock)
+            if (!isReceiving)
             {
-                try
+                lock (ReceiveLock)
                 {
-
-                    byte[] receivedMessage = new byte[256];
-                    stream.Read(receivedMessage, 0, receivedMessage.Length);
-                    receivedMessage = TrimEnd(receivedMessage);
-                    string recievedMessageString = this.userName + ": " + Encoding.ASCII.GetString(receivedMessage);
-                    Console.WriteLine(recievedMessageString);
-
-                    //Task.Run(() => server.Broadcast(recievedMessageString));
-                    return recievedMessageString;
-                }
-                catch
-                {
-                    
-                    return disconnected;
+                    try
+                    {
+                        isReceiving = true;
+                        byte[] receivedMessage = new byte[256];
+                        stream.Read(receivedMessage, 0, receivedMessage.Length);
+                        receivedMessage = TrimEnd(receivedMessage);
+                        string recievedMessageString = this.userName + ": " + Encoding.ASCII.GetString(receivedMessage);
+                        Console.WriteLine(recievedMessageString);
+                        isReceiving = false;
+                        //Task.Run(() => server.Broadcast(recievedMessageString));
+                        return recievedMessageString;
+                    }
+                    catch
+                    {
+                        isReceiving = false;
+                        return disconnected;
+                    }
                 }
             }
+            return null;
         }
         public static byte[] TrimEnd(byte[] array)
         {
