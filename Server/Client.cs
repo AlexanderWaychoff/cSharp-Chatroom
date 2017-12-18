@@ -9,11 +9,11 @@ namespace Server
 {
     class Client
     {
-        NetworkStream stream;
+        public NetworkStream stream;
         TcpClient client;
         //Server server = new Server();
         public string UserId;
-        public string userName;
+        public string userName = "";
         private string disconnected = " disconnected.";
         Object ReceiveLock = new Object();
         public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
@@ -45,7 +45,7 @@ namespace Server
                     byte[] receivedMessage = new byte[256];
                     stream.Read(receivedMessage, 0, receivedMessage.Length);
                     receivedMessage = TrimEnd(receivedMessage);
-                    string recievedMessageString = Encoding.ASCII.GetString(receivedMessage);
+                    string recievedMessageString = this.userName + ": " + Encoding.ASCII.GetString(receivedMessage);
                     Console.WriteLine(recievedMessageString);
 
                     //Task.Run(() => server.Broadcast(recievedMessageString));
