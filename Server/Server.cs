@@ -67,15 +67,17 @@ namespace Server
             IsServerOpen = true;
             Task.Run(() => AcceptClient());
         }
-        public void Broadcast(string sendMessage, int i = 0)
+        public void Broadcast(string sendMessage)
         {
             lock (BroadcastLock)
             {
-                for (i = 0; i < clientListeners.Count; i++)
+                for (int i = 0; i < clientListeners.Count; i++)
                 {
                     try
                     {
+                        RemoveFromQueue();                        
                         clientListeners[i].Send(sendMessage);
+                        
                     }
                     catch
                     {
@@ -89,22 +91,7 @@ namespace Server
                 }
             }
         }
-        public void BroadcastDupe(string sendMessage)
-        {
-            Client filter;
-            foreach (KeyValuePair<int, Client> user in allSubscribers)
-            {
-                try
-                {
-                    filter = user.Value;
-                    filter.Send(sendMessage);
-                }
-                catch
-                {
-                    Console.WriteLine("Message failed to send");
-                }
-            }
-        }
+        
         private void AcceptClient()
         {
             while (isServerOpen)
@@ -183,6 +170,7 @@ namespace Server
                     if (message != disconnected)
                     {
                         message = clientListeners[clientListenerIndexCounter].Receive();
+                        AddToQueue(message);
                     }
                 }
                 lock (ReceiveLock)
@@ -194,6 +182,7 @@ namespace Server
                         //clientListeners.RemoveAt(saveClientIndexCounter);
                         Broadcast(saveUserName + disconnected);
                         message = null;
+                        AddToQueue(message);
                     }
                 }
                 if (message != null)
@@ -202,6 +191,7 @@ namespace Server
                     lock (LimitClientActionLock)
                     {
                         Broadcast(message);
+                        AddToQueue(message);
                     }
                     message = null;
                 }
@@ -223,6 +213,7 @@ namespace Server
                 try
                 {
                     clientListeners[i].Send(newUser + " has joined the chatroom.");
+                    AddToQueue(newUser);
                 }
                 catch
                 {
