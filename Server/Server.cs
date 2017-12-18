@@ -22,9 +22,12 @@ namespace Server
         private Object DictionaryLock = new Object();
         private Object LimitClientActionLock = new Object();
         private Object BroadcastLock = new Object();
+        private Object ReceiveLock = new Object();
         private ILog Logger;
         int UserId = 0;
         int clientListenerIndexCounter = 0;
+        private int saveClientIndexCounter = 0;
+        private string disconnected = " disconnected."; //dependency inject this later; in Receive method
         string message = null;
         string previousMessage = null;
         private Object AcceptClientLock = new Object();
@@ -65,7 +68,6 @@ namespace Server
         }
         public void Broadcast(string sendMessage)
         {
-            int key = 0;
             lock (BroadcastLock)
             {
                 for (int i = 0; i < clientListeners.Count; i++)
@@ -174,7 +176,20 @@ namespace Server
                     {
                         clientListenerIndexCounter = 0;
                     }
-                    message = clientListeners[clientListenerIndexCounter].Receive();
+                    if (message != disconnected)
+                    {
+                        message = clientListeners[clientListenerIndexCounter].Receive();
+                    }
+                }
+                lock (ReceiveLock)
+                {
+                    if (message == disconnected)
+                    {
+                        saveClientIndexCounter = clientListenerIndexCounter;
+                        Broadcast(clientListeners[saveClientIndexCounter].userName + disconnected);
+                        //clientListeners.RemoveAt(saveClientIndexCounter);
+                        message = null;
+                    }
                 }
                 if (message != null)
                 {
@@ -206,14 +221,13 @@ namespace Server
                 }
                 catch
                 {
-                    Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
-                    allSubscribers.Remove(i);
-                    clientListeners.RemoveAt(i);
-                    i--;
+                    //Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
+                    //allSubscribers.Remove(i);
+                    //clientListeners.RemoveAt(i);
+                    //i--;
                 }
             }
         }
-
 
 
         //public static bool IsConnected(this Socket socket)

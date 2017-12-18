@@ -14,6 +14,7 @@ namespace Server
         //Server server = new Server();
         public string UserId;
         public string userName;
+        private string disconnected = " disconnected.";
         Object ReceiveLock = new Object();
         public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
         //public List<IObserver<Client>> subscribers = new List<IObserver<Client>>();
@@ -53,7 +54,7 @@ namespace Server
                 catch
                 {
                     
-                    return this.userName + " has disconnected from the chat room.";
+                    return disconnected;
                 }
             }
         }
