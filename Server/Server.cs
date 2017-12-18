@@ -133,14 +133,13 @@ namespace Server
             {
                 try
                 {
-                    for (i = 0; threadReceiveListeners.Count < clientListeners.Count && i < clientListeners.Count; i++)
+                    for (i = 0; i < clientListeners.Count; i++)
                     {
                         Thread listener = new Thread(new ThreadStart(Receive));
                         threadReceiveListeners.Add(listener);
                         listener.Start();
                     }
-                    threadReceiveListeners.Clear();
-                    i = 0;
+                    //threadReceiveListeners.Clear();
                 }
                 catch
                 {
@@ -205,7 +204,7 @@ namespace Server
                     }
                     message = null;
                 }
-                threadReceiveListeners.Clear();
+                threadReceiveListeners.RemoveAt(0);
             }
             catch
             {
