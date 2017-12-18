@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class Server : ILogger
+    class Server : TextLogger
     {
         Client clientCommands = new Client();
         Client client;
@@ -23,7 +23,7 @@ namespace Server
         private Object LimitClientActionLock = new Object();
         private Object BroadcastLock = new Object();
         private Object ReceiveLock = new Object();
-        private ILog Logger;
+        ILog textLogger;
         int UserId = 0;
         int clientListenerIndexCounter = 0;
         private int saveClientIndexCounter = 0;
@@ -42,6 +42,9 @@ namespace Server
         static List<Thread> threadReceiveListeners = new List<Thread>();
         static List<Thread> threadConnectionListeners = new List<Thread>();
 
+
+
+
         public static bool IsServerOpen
         {
             get
@@ -53,9 +56,10 @@ namespace Server
                 isServerOpen = value;
             }
         }
-        public Server()
+        public Server(ILog logger)
 
         {
+            textLogger = logger;
             queueMessages = new Queue<string>();
             int port = 9999;            
             listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")

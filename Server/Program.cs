@@ -10,7 +10,8 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            new Server().Run();
+            TextLogger textLogger = new TextLogger();
+            new Server(textLogger).Run();
             while (Server.IsServerOpen)
             {
                 //string message = Server.client.Receive();
