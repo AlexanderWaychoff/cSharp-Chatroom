@@ -17,7 +17,7 @@ namespace Server
         Client client;
         public Dictionary<int, Client> allSubscribers = new Dictionary<int, Client>();
         TcpListener listener;
-        private Queue<Message> queueMessages;
+        private Queue<string> queueMessages;
         private Object QueueLock = new Object();                
         private Object DictionaryLock = new Object();
         private Object LimitClientActionLock = new Object();
@@ -55,7 +55,7 @@ namespace Server
         public Server()
 
         {
-            queueMessages = new Queue<Message>();
+            queueMessages = new Queue<string>();
             int port = 9999;            
             listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")
             listener.Start();
@@ -242,18 +242,17 @@ namespace Server
         //    }
         //}
 
-        private void AddToQueue(string message, Client client)
+        private void AddToQueue(string message)
         {
             lock(QueueLock)
-            {
-                Message clientMessage = new Message(client, message);
-                queueMessages.Enqueue(clientMessage);
+            {                
+                queueMessages.Enqueue(message);
             }                      
         }
 
-        private Message RemoveFromQueue()
+        private void RemoveFromQueue()
         {
-            return queueMessages.Dequeue();
+            queueMessages.Dequeue();
         }
 
        // public void SendToAll(socket, string message)
