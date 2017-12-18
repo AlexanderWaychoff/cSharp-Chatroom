@@ -81,6 +81,7 @@ namespace Server
                     {
                         RemoveFromQueue();                        
                         clientListeners[i].Send(sendMessage);
+                        LogMessage(sendMessage);
                         
                     }
                     catch
@@ -221,6 +222,7 @@ namespace Server
                 {
                     clientListeners[i].Send(newUser + " has joined the chatroom.");
                     AddToQueue(newUser);
+                    JoinChat(newUser);
                 }
                 catch
                 {
@@ -255,7 +257,7 @@ namespace Server
 
         private void RemoveFromQueue()
         {
-            queueMessages.Dequeue();
+            queueMessages.Dequeue();            
         }
 
        // public void SendToAll(socket, string message)
