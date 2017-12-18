@@ -28,6 +28,7 @@ namespace Server
         int clientListenerIndexCounter = 0;
         private int saveClientIndexCounter = 0;
         private string disconnected = " disconnected."; //dependency inject this later; in Receive method
+        private string saveUserName;
         string message = null;
         string previousMessage = null;
         private Object AcceptClientLock = new Object();
@@ -66,11 +67,11 @@ namespace Server
             IsServerOpen = true;
             Task.Run(() => AcceptClient());
         }
-        public void Broadcast(string sendMessage)
+        public void Broadcast(string sendMessage, int i = 0)
         {
             lock (BroadcastLock)
             {
-                for (int i = 0; i < clientListeners.Count; i++)
+                for (i = 0; i < clientListeners.Count; i++)
                 {
                     try
                     {
@@ -79,8 +80,10 @@ namespace Server
                     catch
                     {
                         Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
+                        clientListeners[i].stream.Close();
                         allSubscribers.Remove(i);
                         clientListeners.RemoveAt(i);
+                        //Broadcast(clientListeners[i].userName.ToString() + " has disconnected.", i + 1);
                         i--;
                     }
                 }
@@ -113,7 +116,7 @@ namespace Server
                 client = new Client(stream, clientSocket);
                 lock (DictionaryLock) allSubscribers.Add(UserId, client);
                 clientListeners.Add(client);
-                Task.Run(() => InformSubscribersOfNewUser());
+                Task.Run(() => InformSubscribersOfNewUser(clientListeners[clientListeners.Count - 1].userName.ToString()));
                 areUsersConnected = true;
                 UserId += 1;
                 if (!needThreads)
@@ -130,13 +133,14 @@ namespace Server
             {
                 try
                 {
-                    for (i = 0; threadReceiveListeners.Count < clientListeners.Count; i++)
+                    for (i = 0; threadReceiveListeners.Count < clientListeners.Count && i < clientListeners.Count; i++)
                     {
                         Thread listener = new Thread(new ThreadStart(Receive));
                         threadReceiveListeners.Add(listener);
                         listener.Start();
                     }
                     threadReceiveListeners.Clear();
+                    i = 0;
                 }
                 catch
                 {
@@ -186,8 +190,9 @@ namespace Server
                     if (message == disconnected)
                     {
                         saveClientIndexCounter = clientListenerIndexCounter;
-                        Broadcast(clientListeners[saveClientIndexCounter].userName + disconnected);
+                        saveUserName = clientListeners[saveClientIndexCounter].userName;
                         //clientListeners.RemoveAt(saveClientIndexCounter);
+                        Broadcast(saveUserName + disconnected);
                         message = null;
                     }
                 }
@@ -211,13 +216,13 @@ namespace Server
         {
              client.Send(body);            
         }
-        public void InformSubscribersOfNewUser()
+        public void InformSubscribersOfNewUser(string newUser)
         {
             for (int i = 0; i < clientListeners.Count; i++)
             {
                 try
                 {
-                    clientListeners[i].Send(allSubscribers[clientListeners.Count - 1].userName + " has joined the chatroom.");
+                    clientListeners[i].Send(newUser + " has joined the chatroom.");
                 }
                 catch
                 {
