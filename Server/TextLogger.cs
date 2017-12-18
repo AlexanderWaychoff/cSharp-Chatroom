@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class ILogger : ILog
+    class TextLogger : ILog
     {
         private Object LogKey = new object();
         string path = "log.txt";        

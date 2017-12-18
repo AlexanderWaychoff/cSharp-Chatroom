@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Server
 {
-    class Server : ILogger
+    class Server : TextLogger
     {
         Client clientCommands = new Client();
         Client client;
@@ -23,7 +23,7 @@ namespace Server
         private Object LimitClientActionLock = new Object();
         private Object BroadcastLock = new Object();
         private Object ReceiveLock = new Object();
-        private ILog Logger;
+        ILog textLogger;
         int UserId = 0;
         int clientListenerIndexCounter = 0;
         private int saveClientIndexCounter = 0;
@@ -42,6 +42,9 @@ namespace Server
         static List<Thread> threadReceiveListeners = new List<Thread>();
         static List<Thread> threadConnectionListeners = new List<Thread>();
 
+
+
+
         public static bool IsServerOpen
         {
             get
@@ -53,9 +56,10 @@ namespace Server
                 isServerOpen = value;
             }
         }
-        public Server()
+        public Server(ILog logger)
 
         {
+            textLogger = logger;
             queueMessages = new Queue<string>();
             int port = 9999;            
             listener = new TcpListener(IPAddress.Any, port); //Parse("127.0.0.1")
@@ -67,15 +71,17 @@ namespace Server
             IsServerOpen = true;
             Task.Run(() => AcceptClient());
         }
-        public void Broadcast(string sendMessage, int i = 0)
+        public void Broadcast(string sendMessage)
         {
             lock (BroadcastLock)
             {
-                for (i = 0; i < clientListeners.Count; i++)
+                for (int i = 0; i < clientListeners.Count; i++)
                 {
                     try
                     {
+                        RemoveFromQueue();                        
                         clientListeners[i].Send(sendMessage);
+                        
                     }
                     catch
                     {
@@ -89,22 +95,7 @@ namespace Server
                 }
             }
         }
-        public void BroadcastDupe(string sendMessage)
-        {
-            Client filter;
-            foreach (KeyValuePair<int, Client> user in allSubscribers)
-            {
-                try
-                {
-                    filter = user.Value;
-                    filter.Send(sendMessage);
-                }
-                catch
-                {
-                    Console.WriteLine("Message failed to send");
-                }
-            }
-        }
+        
         private void AcceptClient()
         {
             while (isServerOpen)
@@ -182,6 +173,7 @@ namespace Server
                     if (message != disconnected)
                     {
                         message = clientListeners[clientListenerIndexCounter].Receive();
+                        AddToQueue(message);
                     }
                 }
                 lock (ReceiveLock)
@@ -193,6 +185,7 @@ namespace Server
                         //clientListeners.RemoveAt(saveClientIndexCounter);
                         Broadcast(saveUserName + disconnected);
                         message = null;
+                        AddToQueue(message);
                     }
                 }
                 if (message != null)
@@ -201,6 +194,7 @@ namespace Server
                     lock (LimitClientActionLock)
                     {
                         Broadcast(message);
+                        AddToQueue(message);
                     }
                     message = null;
                 }
@@ -222,6 +216,7 @@ namespace Server
                 try
                 {
                     clientListeners[i].Send(newUser + " has joined the chatroom.");
+                    AddToQueue(newUser);
                 }
                 catch
                 {
