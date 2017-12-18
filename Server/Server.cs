@@ -186,6 +186,7 @@ namespace Server
                         Broadcast(saveUserName + disconnected);
                         message = null;
                         AddToQueue(message);
+                        LeaveChat(saveUserName);
                     }
                 }
                 if (message != null)
@@ -193,8 +194,8 @@ namespace Server
                     previousMessage = message;
                     lock (LimitClientActionLock)
                     {
-                        Broadcast(message);
                         AddToQueue(message);
+                        Broadcast(message);                        
                     }
                     message = null;
                 }
