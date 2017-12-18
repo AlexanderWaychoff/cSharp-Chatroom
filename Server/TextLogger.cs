@@ -18,7 +18,7 @@ namespace Server
             {
                 using (StreamWriter write = File.AppendText(path))
                 {
-                    write.WriteLine(message + DateTime.Now.ToLongTimeString());                    
+                    write.WriteLine(message + " " + DateTime.Now.ToLongTimeString());                    
                 }
             }
         }
