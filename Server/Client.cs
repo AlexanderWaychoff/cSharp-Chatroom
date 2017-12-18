@@ -41,9 +41,10 @@ namespace Server
                 try
                 {
 
-                    byte[] recievedMessage = new byte[256];
-                    stream.Read(recievedMessage, 0, recievedMessage.Length);
-                    string recievedMessageString = Encoding.ASCII.GetString(recievedMessage);
+                    byte[] receivedMessage = new byte[256];
+                    stream.Read(receivedMessage, 0, receivedMessage.Length);
+                    receivedMessage = TrimEnd(receivedMessage);
+                    string recievedMessageString = Encoding.ASCII.GetString(receivedMessage);
                     Console.WriteLine(recievedMessageString);
 
                     //Task.Run(() => server.Broadcast(recievedMessageString));
@@ -51,14 +52,23 @@ namespace Server
                 }
                 catch
                 {
-                    return null;
+                    
+                    return this.userName + " has disconnected from the chat room.";
                 }
             }
-                    //catch
-                    //{
-                    //    return "";
-                    //}
-//}
-        }        
-    }
+        }
+        public static byte[] TrimEnd(byte[] array)
+        {
+            int lastIndex = Array.FindLastIndex(array, b => b != 0);
+
+            Array.Resize(ref array, lastIndex + 1);
+
+            return array;
+        }
+        //catch
+        //{
+        //    return "";
+        //}
+        //}
+    }        
 }

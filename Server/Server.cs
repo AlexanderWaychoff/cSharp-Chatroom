@@ -15,12 +15,13 @@ namespace Server
     {
         Client clientCommands = new Client();
         Client client;
-        public Dictionary<int, Client> userInfo = new Dictionary<int, Client>();
+        public Dictionary<int, Client> allSubscribers = new Dictionary<int, Client>();
         TcpListener listener;
         private Queue<Message> queueMessages;
         private Object QueueLock = new Object();                
         private Object DictionaryLock = new Object();
         private Object LimitClientActionLock = new Object();
+        private Object BroadcastLock = new Object();
         private ILog Logger;
         int UserId = 0;
         int clientListenerIndexCounter = 0;
@@ -65,25 +66,28 @@ namespace Server
         public void Broadcast(string sendMessage)
         {
             int key = 0;
-            for (int i = 0; i < clientListeners.Count; i++)
+            lock (BroadcastLock)
             {
-                try
+                for (int i = 0; i < clientListeners.Count; i++)
                 {
-                    clientListeners[i].Send(sendMessage);
-                }
-                catch
-                {
-                    Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
-                    userInfo.Remove(i);
-                    clientListeners.RemoveAt(i);
-                    i--;
+                    try
+                    {
+                        clientListeners[i].Send(sendMessage);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
+                        allSubscribers.Remove(i);
+                        clientListeners.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
         }
         public void BroadcastDupe(string sendMessage)
         {
             Client filter;
-            foreach (KeyValuePair<int, Client> user in userInfo)
+            foreach (KeyValuePair<int, Client> user in allSubscribers)
             {
                 try
                 {
@@ -105,8 +109,9 @@ namespace Server
                 Console.WriteLine("Connection Initiated");
                 NetworkStream stream = clientSocket.GetStream();
                 client = new Client(stream, clientSocket);
-                lock (DictionaryLock) userInfo.Add(UserId, client);
+                lock (DictionaryLock) allSubscribers.Add(UserId, client);
                 clientListeners.Add(client);
+                Task.Run(() => InformSubscribersOfNewUser());
                 areUsersConnected = true;
                 UserId += 1;
                 if (!needThreads)
@@ -153,37 +158,64 @@ namespace Server
         }
         private void TestClientConnection()
         {
-            for(int i = 0; i < userInfo.Count; i++)
+            for(int i = 0; i < allSubscribers.Count; i++)
             {
                 
             }
         }
         private void Receive()
         {
-            if (message == null || message == previousMessage)
+            try
+            {
+                if (message == null || message == previousMessage)
                 {
-                clientListenerIndexCounter += 1;
-                    if(clientListenerIndexCounter >= clientListeners.Count)
+                    clientListenerIndexCounter += 1;
+                    if (clientListenerIndexCounter >= clientListeners.Count)
                     {
                         clientListenerIndexCounter = 0;
                     }
-                message = clientListeners[clientListenerIndexCounter].Receive();
-            }
-            if (message != null)
-            {
-                previousMessage = message;
-                lock (LimitClientActionLock)
-                {
-                    Broadcast(message);
+                    message = clientListeners[clientListenerIndexCounter].Receive();
                 }
-                message = null;
+                if (message != null)
+                {
+                    previousMessage = message;
+                    lock (LimitClientActionLock)
+                    {
+                        Broadcast(message);
+                    }
+                    message = null;
+                }
+                threadReceiveListeners.Clear();
             }
-            threadReceiveListeners.Clear();
+            catch
+            {
+
+            }
         }
         public void Respond(string body)
         {
              client.Send(body);            
         }
+        public void InformSubscribersOfNewUser()
+        {
+            for (int i = 0; i < clientListeners.Count; i++)
+            {
+                try
+                {
+                    clientListeners[i].Send(allSubscribers[clientListeners.Count - 1].userName + " has joined the chatroom.");
+                }
+                catch
+                {
+                    Console.WriteLine("Message failed to send to " + clientListeners[i].userName);
+                    allSubscribers.Remove(i);
+                    clientListeners.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+
+
+
         //public static bool IsConnected(this Socket socket)
         //{
         //    try
